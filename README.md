@@ -1,70 +1,86 @@
-# Getting Started with Create React App
+# EduBank Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+EduBank Frontend is the user interface for **EduBank** — an AI-powered educational platform that allows users to upload documents and interact with them using an intelligent Question-Answering system. This frontend is built with **React.js** and **Tailwind CSS**, offering a responsive and intuitive experience.
 
-## Available Scripts
 
-In the project directory, you can run:
 
-### `npm start`
+## ✨ Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- 📤 **File Uploading** – Upload educational documents such as PDFs or notes.
+- 🧠 **AI-Powered Q&A** – Ask questions and receive intelligent answers based on uploaded content.
+- 🌐 **Client-Side Routing** – Seamless navigation using React Router.
+- 💡 **Modern UI** – Clean, responsive, and optimized for all devices using Tailwind CSS.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
 
-### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🛠️ Tech Stack
 
-### `npm run build`
+- **Frontend Framework:** React.js
+- **Styling:** Tailwind CSS
+- **Routing:** React Router DOM
+- **Package Manager:** npm
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🚀 Getting Started
 
-### `npm run eject`
+### Prerequisites
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- Node.js (v16 or later)
+- npm (v8 or later)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Installation
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+#### 1. Clone the Repository
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+git clone https://github.com/EduBank-AI/edubank-frontend.git
+cd edubank-frontend
+```
 
-## Learn More
+#### 2. Install dependencies
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm install
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+#### 3. Start the development server:
 
-### Code Splitting
+```bash
+npm run dev
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+> [!IMPORTANT]
+> Ensure the backend server is running to enable full functionality of uploading the files and using the whole QnA feature.
 
-### Analyzing the Bundle Size
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
 
-### Making a Progressive Web App
+## 📦 Scripts
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run lint` | Run linting checks |
 
-### Advanced Configuration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-### Deployment
+## 🙌 Contributing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Contributions are welcome! Feel free to fork the repository and submit a pull request.
 
-### `npm run build` fails to minify
+Steps:
+1. Fork the project
+2. Create your feature branch `git checkout -b feature/my-feature`
+3. Commit your changes `git commit -m 'Add some feature'`
+4. Push to the branch `git push origin feature/my-feature`
+5. Open a pull request
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+## 📄 License
+This project is licensed under the MIT License.
+
+
+
+## 📬 Contact
+For issues, feature requests, or feedback, please open a GitHub issue.
