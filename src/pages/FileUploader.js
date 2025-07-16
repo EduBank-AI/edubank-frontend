@@ -99,6 +99,7 @@ const FileUploader = () => {
           method: "POST",
           body: formData
         });
+
         
         if (response.ok) {
           // Update file status to success
