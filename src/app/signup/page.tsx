@@ -17,7 +17,10 @@ import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
 import { toast } from "sonner"
 
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus, Key } from "lucide-react";
+
+import NavBar from "~/components/NavBar";
+import MouseFollow from "~/components/MouseFollow";
 
 const SignupPage = () => {
   const router = useRouter();
@@ -42,8 +45,9 @@ const SignupPage = () => {
 
     if (res.ok) {
       localStorage.setItem("token", data.token);
-      toast.success("Signup successful!");
-      router.push("/uploader");
+      localStorage.setItem("email", data.email);
+      toast.success("Account created successfully!");
+      router.push("/profile");
     }
     else {
       toast.error(data.message || "Signup failed");
@@ -51,79 +55,118 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center mt-19">
-      <Card className="w-full max-w-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-        <CardHeader>
-          <CardTitle>Signup for an account</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+    <>
+    <MouseFollow />
+    <NavBar />
+    
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <Card className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl rounded-2xl">
+          <CardHeader className="border-b border-gray-300 dark:border-gray-800 p-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-500/10 dark:bg-blue-400/10 rounded-lg">
+                <UserPlus className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                  Create Account
+                </CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                  Sign up to get started with the platform
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-6">
+            <form onSubmit={handleSignup} className="space-y-4">
+              <div>
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Email Address
+                </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="h-10"
                   required
                 />
               </div>
               
-              <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
+              <div>
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Password
+                </Label>
                 <Input 
                   id="password" 
-                  type="password" 
+                  type="password"
+                  placeholder="Create a password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="h-10"
                   required
                 />
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="password">Access Code</Label>
+              <div>
+                <Label htmlFor="accessCode" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Access Code
+                </Label>
                 <Input 
-                  id="code" 
-                  type="text" 
+                  id="accessCode" 
+                  type="text"
+                  placeholder="Enter your access code"
                   value={accessCode}
                   onChange={(e) => setAccessCode(e.target.value)}
+                  className="h-10"
                   required
                 />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Access code is required to create an account
+                </p>
               </div>
+
+              <Button
+                type="submit"
+                className="w-full h-11 font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white mt-6"
+                disabled={loading || !email.trim() || !password.trim() || !accessCode.trim()}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  <>
+                    <Key className="mr-2 h-4 w-4" />
+                    Create Account
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+
+          <CardFooter className="border-t border-gray-100 dark:border-gray-800 p-6">
+            <div className="w-full text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                Already have an account?
+              </p>
+              <Button 
+                variant="outline" 
+                className="w-full h-10 font-medium transition-colors" 
+                disabled={loading}
+                onClick={() => router.push("/login")}
+              >
+                Sign In
+              </Button>
             </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex-col gap-2">
-          <Button
-            type="submit"
-            className="w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-purple-600 text-white hover:bg-purple-700"
-            onClick={handleSignup}
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              "Sign Up"
-            )}
-          </Button>
-
-
-          <Button 
-            variant="outline" 
-            className="w-full cursor-pointer" 
-            disabled={loading}
-            onClick={() => router.push("/login")}
-          >
-            Login
-          </Button>
-        </CardFooter>
-      </Card>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
+    </>
   );
 };
 

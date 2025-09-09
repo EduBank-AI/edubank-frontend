@@ -1,8 +1,5 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/login/page": "app/login/page.js",
   "/page": "app/page.js",
-  "/qa/page": "app/qa/page.js",
-  "/signup/page": "app/signup/page.js",
-  "/uploader/page": "app/uploader/page.js"
+  "/profile/page": "app/profile/page.js",
+  "/qa/page": "app/qa/page.js"
 }

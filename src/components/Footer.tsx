@@ -17,7 +17,7 @@ export default function Footer() {
   const currentTheme = theme === "system" ? systemTheme : theme;
 
   return (
-    <footer className="border-t pt-7 text-sm text-center text-zinc-400 relative bg-transparent">
+    <footer className="border-t border-gray-400 dark:border-gray-800 pt-7 text-sm text-center text-zinc-400 relative bg-transparent">
       <div className="mx-auto max-w-5xl relative pb-2">
         <div className="absolute right-20 flex items-center space-x-2">
           <Sun size={18} />

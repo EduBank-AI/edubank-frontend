@@ -27,6 +27,9 @@ import {
   SelectValue,
 } from "~/components/ui/select"
 
+import MouseFollow from "~/components/MouseFollow";
+import NavBar from "~/components/NavBar";
+
 interface QA {
   id: number;
   question: string;
@@ -48,7 +51,7 @@ const QASystem = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token || token === "") {
-      router.push("/404"); // ⬅️ Redirect
+      router.push("/404");
     }
   }, [router]);
 
@@ -96,9 +99,7 @@ const QASystem = () => {
 
   const handleGenerateQuestions = async () => {
     if (!topic.trim()) {
-      toast.error("Missing topic", {
-        description: "Please enter a topic to generate questions."
-      });
+      toast.error("Please enter a topic to generate questions.");
       return;
     }
 
@@ -119,7 +120,6 @@ const QASystem = () => {
       **Answer <answer number>:**
       <Answer Text>`;
 
-
     try {
       const token = localStorage.getItem("token");
 
@@ -138,7 +138,6 @@ const QASystem = () => {
       try {
         data = JSON.parse(text);
       } catch {
-        // If backend returned plain text, wrap it as { answer }
         data = { answer: text };
       }
       
@@ -146,14 +145,10 @@ const QASystem = () => {
       const parsedQuestions = parseQuestions(data.answer);
       console.log("Parsed questions:", parsedQuestions);
       setGeneratedQuestions(parsedQuestions);
-      toast.success("Questions Generated", {
-        description: `${parsedQuestions.length} questions created.` 
-      });
+      toast.success(`${parsedQuestions.length} questions generated successfully`);
     } catch (error) {
       console.error("Error fetching questions:", error);
-      toast.error("Error", {
-        description: "Failed to generate questions."
-      });
+      toast.error("Failed to generate questions. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -161,9 +156,7 @@ const QASystem = () => {
 
   const handleGenerateVariant = async () => {
     if (!variantQuestion.trim()) {
-      toast.error("Missing input", {
-        description: "Please enter a question to transform."
-      });
+      toast.error("Please enter a question to transform.");
       return;
     }
 
@@ -196,12 +189,10 @@ const QASystem = () => {
 
       const data = await response.json();
       setVariantResponse(data.answer);
-      toast.success("Variant Generated");
+      toast.success("Question variant generated successfully");
     } catch (error) {
       console.error("Error fetching variant:", error);
-      toast.error("Error", {
-        description: "Failed to generate variant."
-      });
+      toast.error("Failed to generate variant. Please try again.");
     } finally {
       setIsGeneratingVariant(false);
     }
@@ -210,228 +201,299 @@ const QASystem = () => {
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopied(key);
-
-    toast.info("Copied!", {
-      description: "Question and answer copied to clipboard." 
-    });
-
+    toast.success("Copied to clipboard");
     setTimeout(() => setCopied(null), 2000);
   };
 
   const clearQuestions = () => {
     setGeneratedQuestions([]);
-    toast.info("Cleared", {
-      description: "All generated questions have been cleared." 
-    });
+    toast.success("All questions cleared");
   };
 
   return (
-    <div className="max-w-4xl mx-auto w-full mb-20">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2"> Question Generator</h1>
-        <p className="text-gray-400">Generate intelligent questions and answers based on your content</p>
-      </div>
-
-      {/* Generate Questions Section */}
-      <div className="dark:bg-gray-800/65 rounded-2xl shadow-xl p-8 mb-8 border border-gray-200 dark:border-gray-700 bg-slate-200/70">
-        <div className="flex items-center mb-6">
-          <FileText className="w-6 h-6 text-purple-600 mr-3" />
-          <h2 className="text-2xl font-semibold">Generate Questions</h2>
+    <>
+    <MouseFollow />
+    <NavBar />
+    
+    <div className="min-h-screen p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+            Question Generator
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Generate intelligent questions and answers based on your content
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {/* Topic Input */}
-          <div className="md:col-span-2">
-            <Label className="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Topic</Label>
-            <Input
-              type="text"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="Enter the topic..."
-              className="h-12 w-full px-4 py-3 border border-gray-300 rounded-lg transition-all"
-            />
-          </div>
-
-            {/* Difficulty Select */}
+        {/* Generate Questions Section */}
+        <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl rounded-2xl p-6 mb-6">
+          <div className="flex items-center space-x-3 mb-6 border-b border-gray-300 dark:border-gray-800 pb-4">
+            <div className="p-2 bg-blue-500/10 dark:bg-blue-400/10 rounded-lg">
+              <Brain className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
             <div>
-              <Label className="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Difficulty</Label>
-              <Select value={difficulty} onValueChange={setDifficulty} defaultValue="medium">
-                <SelectTrigger className="w-full px-4 border border-gray-300 rounded-lg transition-all" style={{ height: "3rem" }}>
-                  <SelectValue placeholder="Select difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="easy">Easy</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="hard">Hard</SelectItem>
-                </SelectContent>
-              </Select>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Generate Questions
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Create custom questions from your uploaded content
+              </p>
             </div>
           </div>
 
-          {/* Number of Questions */}
-          <div className="flex items-center mb-6">
-            <label className="text-sm font-medium dark:text-gray-400 text-gray-600 mr-4">Number of Questions:</label>
-            <div className="flex items-center space-x-3">
-              <Button
-                onClick={() => setNumQuestions(Math.max(1, numQuestions - 1))}
-                className="p-2 rounded-full bg-transparent hover:bg-transparent hover:shadow-[inset_0_0px_5px_rgba(0,0,0,0.2)] dark:hover:shadow-[inset_0_0px_7px_rgba(0,0,0,0.8)] border border-gray-300 transition-all cursor-pointer"
-              >
-                <Minus className="w-4 h-4 dark:text-white text-black transition-colors" />
-              </Button>
-              <span className="text-xl font-semibold min-w-[2rem] text-center">
-                {numQuestions}
-              </span>
-              <Button
-                onClick={() => setNumQuestions(Math.min(20, numQuestions + 1))}
-                className="p-2 rounded-full bg-transparent hover:bg-transparent hover:shadow-[inset_0_0px_5px_rgba(0,0,0,0.2)] dark:hover:shadow-[inset_0_0px_7px_rgba(0,0,0,0.8)] border border-gray-300 transition-all cursor-pointer"
-              >
-                <Plus className="w-4 h-4 dark:text-white text-black transition-colors" />
-              </Button>
-            </div>
-          </div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Topic Input */}
+              <div className="md:col-span-2">
+                <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Topic
+                </Label>
+                <Input
+                  type="text"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="Enter the topic for questions..."
+                  className="h-10"
+                />
+              </div>
 
-          {/* Generate Button */}
-          <div className="flex space-x-4">
-            <Button
-              onClick={handleGenerateQuestions}
-              disabled={isGenerating || !topic.trim()}
-              className={`h-12 flex-1 py-3 px-6 rounded-lg font-semibold transition-all cursor-pointer ${
-                isGenerating || !topic.trim()
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed text-lg"
-                  : "bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg transform hover:-translate-y-0.5 text-lg"
-              }`}
-            >
-              {isGenerating ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                  <span>Generating Questions...</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center space-x-2">
-                  <Brain className="w-5 h-5" />
-                  <span>Generate Questions</span>
-                </div>
+              {/* Difficulty Select */}
+              <div>
+                <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Difficulty
+                </Label>
+                <Select value={difficulty} onValueChange={setDifficulty}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="easy">Easy</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="hard">Hard</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Number of Questions */}
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Number of Questions
+              </Label>
+              <div className="flex items-center space-x-3">
+                <Button
+                  onClick={() => setNumQuestions(Math.max(1, numQuestions - 1))}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                <span className="text-lg font-semibold text-gray-900 dark:text-gray-100 min-w-[2rem] text-center">
+                  {numQuestions}
+                </span>
+                <Button
+                  onClick={() => setNumQuestions(Math.min(20, numQuestions + 1))}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                onClick={handleGenerateQuestions}
+                disabled={isGenerating || !topic.trim()}
+                className="flex-1 h-11"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Brain className="w-4 h-4 mr-2" />
+                    Generate Questions
+                  </>
+                )}
+              </Button>
+              
+              {generatedQuestions.length > 0 && (
+                <Button
+                  onClick={clearQuestions}
+                  variant="outline"
+                  className="px-4"
+                >
+                  Clear All
+                </Button>
               )}
-            </Button>
-            
-            {generatedQuestions.length > 0 && (
-              <Button
-                onClick={clearQuestions}
-                className="h-12 px-6 py-3 bg-gray-800/70 border-2 border-red-500 rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors cursor-pointer bg-transparent"
-              >
-                Clear All
-              </Button>
-            )}
+            </div>
           </div>
-      </div>
+        </div>
 
         {/* Generated Questions Display */}
-      {generatedQuestions.length > 0 && (
-          <div className="dark:bg-gray-800/65  bg-slate-200/70 rounded-2xl shadow-xl p-8 mb-8 border border-gray-200/70">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold">Generated Questions</h3>
-              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
-                {generatedQuestions.length} questions
-              </span>
+        {generatedQuestions.length > 0 && (
+          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl rounded-2xl p-6 mb-6">
+            <div className="flex items-center justify-between mb-6 border-b border-gray-300 dark:border-gray-800 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-500/10 dark:bg-green-400/10 rounded-lg">
+                  <FileText className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Generated Questions
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {generatedQuestions.length} question{generatedQuestions.length !== 1 ? 's' : ''} ready
+                  </p>
+                </div>
+              </div>
+              <div className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
+                {generatedQuestions.length}
+              </div>
             </div>
             
-            <div className="space-y-6 ">
+            <div className="space-y-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
               {generatedQuestions.map((qa, index) => (
-                <div key={index} className="bg-white shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
+                <div 
+                  key={index} 
+                  className="bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl p-4"
+                >
+                  <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <span className="text-purple-600 font-semibold text-sm">{index + 1}</span>
+                      <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-blue-600 dark:text-blue-400 font-medium text-sm">
+                          {index + 1}
+                        </span>
                       </div>
-                      <h4 className="font-semibold text-gray-800">Question {index + 1}</h4>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                        Question {index + 1}
+                      </span>
                     </div>
                     <Button
                       onClick={() => copyToClipboard(`Q: ${qa.question}\nA: ${qa.answer}`, `q-${qa.id}`)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors bg-transparent cursor-pointer"
-                      title="Copy question and answer"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
                     >
-                      {copied === `q-${qa.id}` ? <Check className="w-4 h-4 text-gray-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                      {copied === `q-${qa.id}` ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-gray-500" />
+                      )}
                     </Button>
-
                   </div>
                   
-                  <div className="mb-4">
-                    <p className="text-gray-700 leading-relaxed">{qa.question}</p>
+                  <div className="mb-3">
+                    <p className="text-gray-900 dark:text-gray-100 leading-relaxed">
+                      {qa.question}
+                    </p>
                   </div>
                   
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="bg-green-50/50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3">
                     <div className="flex items-center mb-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                      <span className="text-sm font-medium text-green-800">Answer</span>
+                      <span className="text-xs font-medium text-green-700 dark:text-green-400 uppercase tracking-wide">
+                        Answer
+                      </span>
                     </div>
-                    <p className="text-green-700 whitespace-pre-wrap">{qa.answer}</p>
+                    <p className="text-sm text-green-700 dark:text-green-300 whitespace-pre-wrap">
+                      {qa.answer}
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-      )}
+        )}
 
         {/* Generate Variants Section */}
-      <div className="dark:bg-gray-800/65 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700 bg-slate-200/70">
-          <div className="flex items-center mb-6">
-            <Zap className="w-6 h-6 text-blue-600 mr-3" />
-            <h2 className="text-2xl font-semibold">Generate Question Variants</h2>
+        <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl rounded-2xl p-6">
+          <div className="flex items-center space-x-3 mb-6 border-b border-gray-300 dark:border-gray-800 pb-4">
+            <div className="p-2 bg-blue-500/10 dark:bg-blue-400/10 rounded-lg">
+              <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Generate Question Variants
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Create variations of existing questions with different values
+              </p>
+            </div>
           </div>
 
-          <div className="mb-6">
-            <Label className="block text-sm font-medium  dark:text-gray-400 text-gray-600 mb-2">Enter a question to create variants</Label>
-            <Textarea 
-              value={variantQuestion}
-              onChange={(e) => setVariantQuestion(e.target.value)}
-              placeholder="Paste a question here to generate a similar variant with different values..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg transition-all resize-none overflow-y-auto max-h-40"
-            />
-          </div>
+          <div className="space-y-4">
+            <div>
+              <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Original Question
+              </Label>
+              <Textarea 
+                value={variantQuestion}
+                onChange={(e) => setVariantQuestion(e.target.value)}
+                placeholder="Paste a question here to generate a similar variant with different values..."
+                className="min-h-[100px] resize-none"
+              />
+            </div>
 
-          <Button
-            onClick={handleGenerateVariant}
-            disabled={isGeneratingVariant || !variantQuestion.trim()}
-            className={`h-12 w-full py-3 px-6 rounded-lg font-semibold transition-all cursor-pointer ${
-              isGeneratingVariant || !variantQuestion.trim()
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed text-lg"
-                : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg transform hover:-translate-y-0.5 text-lg"
-            }`}
-          >
-            {isGeneratingVariant ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                <span>Generating Variant...</span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center space-x-2">
-                <RefreshCw className="w-5 h-5" />
-                <span>Generate Variant</span>
+            <Button
+              onClick={handleGenerateVariant}
+              disabled={isGeneratingVariant || !variantQuestion.trim()}
+              className="w-full h-11"
+            >
+              {isGeneratingVariant ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Generating Variant...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Generate Variant
+                </>
+              )}
+            </Button>
+
+            {/* Display Variant Response */}
+            {variantResponse && (
+              <div className="bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-blue-700 dark:text-blue-400 uppercase tracking-wide">
+                      Generated Variant
+                    </span>
+                  </div>
+                  <Button
+                    onClick={() => copyToClipboard(variantResponse, "variant")}
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                  >
+                    {copied === "variant" ? (
+                      <Check className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Copy className="w-4 h-4 text-blue-600" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-sm text-blue-700 dark:text-blue-300 whitespace-pre-wrap leading-relaxed">
+                  {variantResponse}
+                </p>
               </div>
             )}
-          </Button>
-
-          {/* Display Variant Response */}
-          {variantResponse && (
-            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
-              <div className="flex items-center mb-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                <span className="font-semibold text-blue-800">Generated Variant</span>
-                <Button
-                  onClick={() => copyToClipboard(variantResponse, "variant")}
-                  className="ml-auto p-2 hover:bg-blue-100 rounded-lg transition-colors bg-transparent cursor-pointer"
-                  title="Copy variant"
-                >
-                  {copied === "variant" ? <Check className="w-4 h-4 text-blue-600" /> : <Copy className="w-4 h-4 text-blue-600" />}
-                </Button>
-
-              </div>
-              <p className="text-blue-700 whitespace-pre-wrap leading-relaxed">{variantResponse}</p>
-            </div>
-          )}
+          </div>
+        </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -27,6 +27,10 @@ const config = {
       },
     ];
   },
+
+  experimental: {
+    proxyTimeout: 300000,
+  },
 };
 
 export default config;

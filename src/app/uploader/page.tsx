@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, File, CheckCircle, AlertCircle, X } from "lucide-react";
+
+import { 
+  Upload, 
+  File, 
+  CheckCircle, 
+  AlertCircle, 
+  X, 
+  CloudUpload 
+} from "lucide-react";
 
 import {
   Card,
@@ -12,8 +20,10 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
-import { Toaster } from "~/components/ui/sonner";
 import { toast } from "sonner";
+
+import NavBar from "~/components/NavBar";
+import MouseFollow from "~/components/MouseFollow";
 
 interface FileObject {
   file: File;
@@ -32,7 +42,7 @@ const FileUploader = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token || token === "") {
-      router.push("/404"); // ⬅️ Redirect
+      router.push("/404");
     }
   }, [router]);
 
@@ -199,158 +209,199 @@ const FileUploader = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 ">
-      <Card className="w-full max-w-md p-6 rounded-2xl shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all duration-300">
-        <CardHeader className="text-center mb-6">
-          <CardTitle className="text-2xl font-bold mb-1 text-gray-800 dark:text-gray-100">
-            Upload File
-          </CardTitle>
-          <CardDescription className="text-gray-600 dark:text-gray-300 text-sm">
-            Select multiple files or drag and drop them
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="px-0">
-          <div
-            className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-colors duration-300 mb-4 ${
-              dragOver
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/50"
-                : files.length > 0
-                ? "border-green-400 bg-green-50 dark:bg-green-900/50"
-                : "border-gray-300 hover:border-blue-400 dark:border-gray-600 dark:hover:border-blue-500 dark:bg-gray-700"
-            }`}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-          >
-            <p className="mb-1 font-medium text-gray-700 dark:text-gray-200 text-sm">
-              Drag & drop your files here
-            </p>
-            <p className="text-xs mb-2 text-gray-500 dark:text-gray-400">or</p>
-            <label className="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold rounded-lg cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300 text-sm dark:border dark:brder-gray-500">
-              Choose Files
-              <input
-                type="file"
-                multiple
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
-            {files.length > 0 && (
-              <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">
-                {files.length} file(s) selected
-              </p>
-            )}
-          </div>
-        </CardContent>
-          
-        {files.length > 0 && (
-          <CardContent className="px-0">
-            <div className="mb-4 space-y-2 max-h-52 overflow-y-auto bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl p-3 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-500">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                  Selected Files
-                </h3>
-                <Button
-                  onClick={clearAllFiles}
-                  className="text-xs text-red-600 hover:text-white hover:bg-red-600 border border-red-600 rounded-full px-2 py-0.5 transition-colors duration-300 bg-transparent cursor-pointer"
-                  disabled={isUploading}
-                >
-                  Clear All
-                </Button>
+    <>
+    <MouseFollow />
+    <NavBar />
+    
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="w-full max-w-2xl">
+        <Card className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl rounded-2xl">
+          {/* Minimalist header */}
+          <CardHeader className="border-b border-gray-300 dark:border-gray-800 p-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-500/10 dark:bg-blue-400/10 rounded-lg">
+                <CloudUpload className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-        
-              {files.map((fileObj) => (
-                <div
-                  key={fileObj.id}
-                  className={`flex items-center justify-between p-2 rounded-lg border text-xs shadow-[inset_0_0px_2px_rgba(0,0,0,0.3)] dark:shadow-[inset_0_0px_6px_rgba(0,0,0,0.3)] transition-colors duration-300 ${
-                    fileObj.status === "success"
-                      ? "bg-green-50 border-green-400 dark:bg-green-900/50 dark:border-green-500"
-                      : fileObj.status === "error"
-                      ? "bg-red-50 border-red-400 dark:bg-red-900/50 dark:border-red-500"
-                      : fileObj.status === "uploading"
-                      ? "bg-blue-50 border-blue-400 dark:bg-blue-900/50 dark:border-blue-500"
-                      : "bg-gray-50 border-gray-300 dark:bg-gray-700 dark:border-gray-600"
-                  }`}
-                >
-                  <div className="flex items-center space-x-2 flex-1 min-w-0">
-                    <div
-                      className={`p-1 rounded-full transition-colors duration-300 ${
-                        fileObj.status === "success"
-                          ? "bg-green-100 dark:bg-green-700"
-                          : fileObj.status === "error"
-                          ? "bg-red-100 dark:bg-red-700"
-                          : fileObj.status === "uploading"
-                          ? "bg-blue-100 dark:bg-blue-700"
-                          : "bg-gray-100 dark:bg-gray-600"
-                      }`}
-                    >
-                      {fileObj.status === "success" ? (
-                        <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-300" />
-                      ) : fileObj.status === "error" ? (
-                        <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
-                      ) : fileObj.status === "uploading" ? (
-                        <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <File className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate text-gray-800 dark:text-gray-200 text-xs">
-                        {fileObj.file.name}
-                      </p>
-                      <p className="text-gray-500 dark:text-gray-400 text-[10px]">
-                        {formatFileSize(fileObj.file.size)}
-                      </p>
-                    </div>
+              <div>
+                <CardTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                  File Upload
+                </CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                  Upload files to process with AI
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-6 space-y-6">
+            {/* Tech-style drop zone */}
+            <div
+              className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-200 ${
+                dragOver
+                  ? "border-blue-400 bg-blue-50/50 dark:bg-blue-950/50"
+                  : files.length > 0
+                  ? "border-green-400 bg-green-50/30 dark:bg-green-950/30"
+                  : "border-gray-300 dark:border-gray-600 bg-gray-50/30 dark:bg-gray-800/30 hover:border-gray-400 dark:hover:border-gray-500"
+              }`}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+            >
+              <div className="flex flex-col items-center space-y-4 text-center">
+                <div className={`p-3 rounded-full transition-colors ${
+                  dragOver 
+                    ? "bg-blue-100 dark:bg-blue-900/50" 
+                    : files.length > 0
+                    ? "bg-green-100 dark:bg-green-900/50"
+                    : "bg-gray-100 dark:bg-gray-700"
+                }`}>
+                  <Upload className={`w-8 h-8 ${
+                    dragOver 
+                      ? "text-blue-500" 
+                      : files.length > 0
+                      ? "text-green-500"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`} />
+                </div>
+                
+                <div>
+                  <p className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    Drop files here to upload
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    or browse from your device
+                  </p>
+                  
+                  <label className="inline-flex items-center px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors cursor-pointer">
+                    Browse Files
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {files.length > 0 && (
+                  <div className="flex items-center space-x-2 px-3 py-1 bg-green-100 dark:bg-green-900/30 rounded-full text-sm">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-green-700 dark:text-green-400 font-medium">
+                      {files.length} file{files.length !== 1 ? "s" : ""} selected
+                    </span>
                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* Files list with tech styling */}
+            {files.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
+                    Files ({files.length})
+                  </h3>
                   <Button
-                    onClick={() => removeFile(fileObj.id)}
-                    className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors ml-1 cursor-pointer size-5"
+                    onClick={clearAllFiles}
                     disabled={isUploading}
-                    variant="secondary"
-                    size="icon"
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 h-8 px-3"
                   >
-                    <X className="w-3 h-3 text-gray-400 dark:text-gray-300" />
+                    Clear All
                   </Button>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        )}
+                
+                <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+                  {files.map((fileObj) => (
+                    <div
+                      key={fileObj.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                        fileObj.status === "success"
+                          ? "bg-green-50/50 dark:bg-green-950/30 border-green-200 dark:border-green-800"
+                          : fileObj.status === "error"
+                          ? "bg-red-50/50 dark:bg-red-950/30 border-red-200 dark:border-red-800"
+                          : fileObj.status === "uploading"
+                          ? "bg-blue-50/50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800"
+                          : "bg-gray-50/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div className={`p-2 rounded-md ${
+                          fileObj.status === "success"
+                            ? "bg-green-100 dark:bg-green-900/50"
+                            : fileObj.status === "error"
+                            ? "bg-red-100 dark:bg-red-900/50"
+                            : fileObj.status === "uploading"
+                            ? "bg-blue-100 dark:bg-blue-900/50"
+                            : "bg-gray-100 dark:bg-gray-700"
+                        }`}>
+                          {fileObj.status === "success" ? (
+                            <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                          ) : fileObj.status === "error" ? (
+                            <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                          ) : fileObj.status === "uploading" ? (
+                            <div className="w-4 h-4 border-2 border-blue-600 dark:border-blue-400 border-t-transparent dark:border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <File className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                            {fileObj.file.name}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {formatFileSize(fileObj.file.size)}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => removeFile(fileObj.id)}
+                        disabled={isUploading}
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      >
+                        <X className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {!isUploading && (
-          <CardContent className="px-0">
-            <Button
-              onClick={uploadStatus === "success" ? handleContinue : handleUpload}
-              disabled={files.length === 0}
-              className={`w-full h-11 cursor-pointer rounded-xl font-semibold text-sm transition-all duration-300 transform ${
-                files.length === 0
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : uploadStatus === "success"
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              }`}
-            >
-              {uploadStatus === "success"
-                ? "Continue"
-                : `Upload ${files.length} File${files.length !== 1 ? "s" : ""}`}
-            </Button>
-          </CardContent>
-        )}
+            {/* Action button */}
+            {!isUploading && (
+              <Button
+                onClick={uploadStatus === "success" ? handleContinue : handleUpload}
+                disabled={files.length === 0}
+                className={`w-full h-11 font-medium transition-colors ${
+                  files.length === 0
+                    ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                    : uploadStatus === "success"
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
+              >
+                {uploadStatus === "success" ? "Continue →" : `Upload ${files.length} File${files.length !== 1 ? "s" : ""}`}
+              </Button>
+            )}
 
-        {isUploading && message && (
-          <CardContent className="px-0">
-            <div className="flex items-center space-x-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-800 border border-blue-300 dark:border-blue-700 shadow text-xs h-11">
-              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-blue-700 dark:text-blue-300 font-medium">{message}</p>
-            </div>
+            {/* Upload status */}
+            {isUploading && message && (
+              <div className="flex items-center space-x-3 p-3 rounded-lg bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+                <div className="w-5 h-5 border-2 border-blue-600 dark:border-blue-400 border-t-transparent dark:border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                  {message}
+                </p>
+              </div>
+            )}
           </CardContent>
-        )}
-      </Card>
+        </Card>
+      </div>
     </div>
+    </>
   );
-
 };
 
 export default FileUploader;
