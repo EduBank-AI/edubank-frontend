@@ -17,7 +17,6 @@ import {
 import { toast } from "sonner"
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea"
-import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
 import {
   Select,
@@ -29,6 +28,7 @@ import {
 
 import MouseFollow from "~/components/MouseFollow";
 import NavBar from "~/components/NavBar";
+import MathRenderer from "~/components/MathRenderer"
 
 interface QA {
   id: number;
@@ -46,14 +46,41 @@ const QASystem = () => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isGeneratingVariant, setIsGeneratingVariant] = useState<boolean>(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [datasets, setDatasets] = useState<{id:number, filename:string, file_url:string}[]>([]);
+  const [selectedDataset, setSelectedDataset] = useState<string>("");
+
   const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token || token === "") {
+    if (!token) {
       router.push("/404");
+      return;
     }
+
+    const fetchDatasets = async () => {
+      try {
+        const res = await fetch(`/api/api/datasets`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch datasets");
+
+        const data = await res.json();
+         const datasets: {id: number, filename: string, file_url: string}[] = Array.isArray(data) ? data : data.datasets ?? [];
+        setDatasets(datasets);
+        if (data.length > 0) setSelectedDataset(data[0]); // select first by default
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load datasets");
+      }
+    };
+
+    fetchDatasets();
   }, [router]);
+
 
   const parseQuestions = (response: string): QA[] => {
     if (!response) return [];
@@ -98,38 +125,28 @@ const QASystem = () => {
   };
 
   const handleGenerateQuestions = async () => {
-    if (!topic.trim()) {
+    if (!selectedDataset.trim()) {
       toast.error("Please enter a topic to generate questions.");
       return;
     }
 
     setIsGenerating(true);
 
-    const prompt = `You are an exam question generator.
-      Using the data provided, generate ${numQuestions} unique questions on the topic ${topic} at ${difficulty} difficulty level.
-
-      For each question:
-
-      Make sure it is relevant to the topic and difficulty specified.
-      Provide a clear, correct answer immediately after the question.
-      Do not include any additional explanation or commentary.
-      
-      Format:
-      **Question <question number>:**
-      <Question Text>
-      **Answer <answer number>:**
-      <Answer Text>`;
+    const prompt = `Generate ${numQuestions} ${difficulty} difficulty questions based on the dataset: ${selectedDataset}.`;
 
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch("/api/ai", {
+      const response = await fetch("/api/api/ai", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           Authorization: token ? `Bearer ${token}` : "",
         },
-        body: JSON.stringify({ question: prompt })
+        body: JSON.stringify({ 
+          question: prompt,
+          mode: "exam", 
+        })
       });
       
       const text = await response.text();
@@ -162,29 +179,19 @@ const QASystem = () => {
 
     setIsGeneratingVariant(true);
 
-    const prompt = `You are a word problem transformer.
-      1. Take the given problem described in ${variantQuestion}.
-      2. Generate a new version of the question by only changing the numeric values (slightly).
-      3. Preserve the logical structure of the question.
-      4. Then, compute and display the correct answer to the new question.
-      5. Only output the transformed question and its answer.
-
-      Format:
-      Question:
-      <your transformed version of the question>
-      Answer:
-      <correct answer to the transformed question>`;
-
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch("/api/ai", {
+      const response = await fetch("/api/api/ai", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json" ,
           Authorization: token ? `Bearer ${token}` : "",
         },
-        body: JSON.stringify({ question: prompt })
+        body: JSON.stringify({ 
+          question: variantQuestion,
+          mode: "transform", 
+        })
       });
 
       const data = await response.json();
@@ -250,14 +257,20 @@ const QASystem = () => {
                 <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Topic
                 </Label>
-                <Input
-                  type="text"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  placeholder="Enter the topic for questions..."
-                  className="h-10"
-                />
+                <Select value={selectedDataset} onValueChange={setSelectedDataset}>
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue placeholder="Select a topic" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {datasets.map((dataset) => (
+                      <SelectItem key={dataset.id} value={dataset.filename}>
+                        {dataset.filename}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
 
               {/* Difficulty Select */}
               <div>
@@ -265,7 +278,7 @@ const QASystem = () => {
                   Difficulty
                 </Label>
                 <Select value={difficulty} onValueChange={setDifficulty}>
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger className="h-10 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -309,7 +322,7 @@ const QASystem = () => {
             <div className="flex gap-3">
               <Button
                 onClick={handleGenerateQuestions}
-                disabled={isGenerating || !topic.trim()}
+                disabled={isGenerating || !selectedDataset.trim()}
                 className="flex-1 h-11"
               >
                 {isGenerating ? (
@@ -329,7 +342,7 @@ const QASystem = () => {
                 <Button
                   onClick={clearQuestions}
                   variant="outline"
-                  className="px-4"
+                  className="px-4 h-11"
                 >
                   Clear All
                 </Button>
@@ -392,9 +405,10 @@ const QASystem = () => {
                   </div>
                   
                   <div className="mb-3">
-                    <p className="text-gray-900 dark:text-gray-100 leading-relaxed">
-                      {qa.question}
-                    </p>
+                    <MathRenderer
+                      content={qa.question}
+                      className="text-gray-900 dark:text-gray-100 leading-relaxed"
+                    />
                   </div>
                   
                   <div className="bg-green-50/50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3">
@@ -404,9 +418,7 @@ const QASystem = () => {
                         Answer
                       </span>
                     </div>
-                    <p className="text-sm text-green-700 dark:text-green-300 whitespace-pre-wrap">
-                      {qa.answer}
-                    </p>
+                    <MathRenderer content={qa.answer} className="text-sm text-green-700 dark:text-green-300" />
                   </div>
                 </div>
               ))}
@@ -484,9 +496,10 @@ const QASystem = () => {
                     )}
                   </Button>
                 </div>
-                <p className="text-sm text-blue-700 dark:text-blue-300 whitespace-pre-wrap leading-relaxed">
-                  {variantResponse}
-                </p>
+                <MathRenderer
+                  content={variantResponse}
+                  className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed"
+                />
               </div>
             )}
           </div>

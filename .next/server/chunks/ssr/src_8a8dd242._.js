@@ -758,12 +758,33 @@ const QASystem = ()=>{
     const [isGenerating, setIsGenerating] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [isGeneratingVariant, setIsGeneratingVariant] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [copied, setCopied] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [datasets, setDatasets] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [selectedDataset, setSelectedDataset] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("");
     const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         const token = localStorage.getItem("token");
-        if (!token || token === "") {
+        if (!token) {
             router.push("/404");
+            return;
         }
+        const fetchDatasets = async ()=>{
+            try {
+                const res = await fetch(`/api/api/datasets`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                if (!res.ok) throw new Error("Failed to fetch datasets");
+                const data = await res.json();
+                const files = Array.isArray(data) ? data : data.datasets ?? [];
+                setDatasets(files);
+                if (data.length > 0) setSelectedDataset(data[0]); // select first by default
+            } catch (err) {
+                console.error(err);
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error("Failed to load datasets");
+            }
+        };
+        fetchDatasets();
     }, [
         router
     ]);
@@ -807,30 +828,18 @@ const QASystem = ()=>{
             return;
         }
         setIsGenerating(true);
-        const prompt = `You are an exam question generator.
-      Using the data provided, generate ${numQuestions} unique questions on the topic ${topic} at ${difficulty} difficulty level.
-
-      For each question:
-
-      Make sure it is relevant to the topic and difficulty specified.
-      Provide a clear, correct answer immediately after the question.
-      Do not include any additional explanation or commentary.
-      
-      Format:
-      **Question <question number>:**
-      <Question Text>
-      **Answer <answer number>:**
-      <Answer Text>`;
+        const prompt = `Generate ${numQuestions} ${difficulty} difficulty questions based on the dataset: ${selectedDataset}.`;
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch("/api/ai", {
+            const response = await fetch("/api/api/ai", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: token ? `Bearer ${token}` : ""
                 },
                 body: JSON.stringify({
-                    question: prompt
+                    question: prompt,
+                    mode: "exam"
                 })
             });
             const text = await response.text();
@@ -862,28 +871,17 @@ const QASystem = ()=>{
             return;
         }
         setIsGeneratingVariant(true);
-        const prompt = `You are a word problem transformer.
-      1. Take the given problem described in ${variantQuestion}.
-      2. Generate a new version of the question by only changing the numeric values (slightly).
-      3. Preserve the logical structure of the question.
-      4. Then, compute and display the correct answer to the new question.
-      5. Only output the transformed question and its answer.
-
-      Format:
-      Question:
-      <your transformed version of the question>
-      Answer:
-      <correct answer to the transformed question>`;
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch("/api/ai", {
+            const response = await fetch("/api/api/ai", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: token ? `Bearer ${token}` : ""
                 },
                 body: JSON.stringify({
-                    question: prompt
+                    question: variantQuestion,
+                    mode: "transform"
                 })
             });
             const data = await response.json();
@@ -910,12 +908,12 @@ const QASystem = ()=>{
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$MouseFollow$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                 fileName: "[project]/src/app/qa/page.tsx",
-                lineNumber: 215,
+                lineNumber: 222,
                 columnNumber: 5
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$NavBar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                 fileName: "[project]/src/app/qa/page.tsx",
-                lineNumber: 216,
+                lineNumber: 223,
                 columnNumber: 5
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -931,7 +929,7 @@ const QASystem = ()=>{
                                     children: "Question Generator"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/qa/page.tsx",
-                                    lineNumber: 222,
+                                    lineNumber: 229,
                                     columnNumber: 11
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -939,13 +937,13 @@ const QASystem = ()=>{
                                     children: "Generate intelligent questions and answers based on your content"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/qa/page.tsx",
-                                    lineNumber: 225,
+                                    lineNumber: 232,
                                     columnNumber: 11
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/qa/page.tsx",
-                            lineNumber: 221,
+                            lineNumber: 228,
                             columnNumber: 9
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -960,12 +958,12 @@ const QASystem = ()=>{
                                                 className: "w-5 h-5 text-blue-600 dark:text-blue-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/qa/page.tsx",
-                                                lineNumber: 234,
+                                                lineNumber: 241,
                                                 columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 233,
+                                            lineNumber: 240,
                                             columnNumber: 13
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -975,7 +973,7 @@ const QASystem = ()=>{
                                                     children: "Generate Questions"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 237,
+                                                    lineNumber: 244,
                                                     columnNumber: 15
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -983,19 +981,19 @@ const QASystem = ()=>{
                                                     children: "Create custom questions from your uploaded content"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 240,
+                                                    lineNumber: 247,
                                                     columnNumber: 15
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 236,
+                                            lineNumber: 243,
                                             columnNumber: 13
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/qa/page.tsx",
-                                    lineNumber: 232,
+                                    lineNumber: 239,
                                     columnNumber: 11
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1012,7 +1010,7 @@ const QASystem = ()=>{
                                                             children: "Topic"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 250,
+                                                            lineNumber: 257,
                                                             columnNumber: 17
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1023,13 +1021,51 @@ const QASystem = ()=>{
                                                             className: "h-10"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 253,
+                                                            lineNumber: 260,
                                                             columnNumber: 17
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 249,
+                                                    lineNumber: 256,
+                                                    columnNumber: 15
+                                                }, ("TURBOPACK compile-time value", void 0)),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
+                                                    value: selectedDataset,
+                                                    onValueChange: setSelectedDataset,
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectTrigger"], {
+                                                            className: "h-10",
+                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectValue"], {
+                                                                placeholder: "Select a dataset"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/app/qa/page.tsx",
+                                                                lineNumber: 270,
+                                                                columnNumber: 19
+                                                            }, ("TURBOPACK compile-time value", void 0))
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/app/qa/page.tsx",
+                                                            lineNumber: 269,
+                                                            columnNumber: 17
+                                                        }, ("TURBOPACK compile-time value", void 0)),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
+                                                            children: datasets.map((file)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
+                                                                    value: file,
+                                                                    children: file
+                                                                }, file, false, {
+                                                                    fileName: "[project]/src/app/qa/page.tsx",
+                                                                    lineNumber: 274,
+                                                                    columnNumber: 21
+                                                                }, ("TURBOPACK compile-time value", void 0)))
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/app/qa/page.tsx",
+                                                            lineNumber: 272,
+                                                            columnNumber: 17
+                                                        }, ("TURBOPACK compile-time value", void 0))
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/app/qa/page.tsx",
+                                                    lineNumber: 268,
                                                     columnNumber: 15
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1039,7 +1075,7 @@ const QASystem = ()=>{
                                                             children: "Difficulty"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 264,
+                                                            lineNumber: 284,
                                                             columnNumber: 17
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
@@ -1050,12 +1086,12 @@ const QASystem = ()=>{
                                                                     className: "h-10",
                                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                         fileName: "[project]/src/app/qa/page.tsx",
-                                                                        lineNumber: 269,
+                                                                        lineNumber: 289,
                                                                         columnNumber: 21
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                                    lineNumber: 268,
+                                                                    lineNumber: 288,
                                                                     columnNumber: 19
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1065,7 +1101,7 @@ const QASystem = ()=>{
                                                                             children: "Easy"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                                            lineNumber: 272,
+                                                                            lineNumber: 292,
                                                                             columnNumber: 21
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1073,7 +1109,7 @@ const QASystem = ()=>{
                                                                             children: "Medium"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                                            lineNumber: 273,
+                                                                            lineNumber: 293,
                                                                             columnNumber: 21
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1081,31 +1117,31 @@ const QASystem = ()=>{
                                                                             children: "Hard"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                                            lineNumber: 274,
+                                                                            lineNumber: 294,
                                                                             columnNumber: 21
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                                    lineNumber: 271,
+                                                                    lineNumber: 291,
                                                                     columnNumber: 19
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 267,
+                                                            lineNumber: 287,
                                                             columnNumber: 17
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 263,
+                                                    lineNumber: 283,
                                                     columnNumber: 15
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 247,
+                                            lineNumber: 254,
                                             columnNumber: 13
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1116,7 +1152,7 @@ const QASystem = ()=>{
                                                     children: "Number of Questions"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 282,
+                                                    lineNumber: 302,
                                                     columnNumber: 15
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1131,12 +1167,12 @@ const QASystem = ()=>{
                                                                 className: "w-4 h-4"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/qa/page.tsx",
-                                                                lineNumber: 292,
+                                                                lineNumber: 312,
                                                                 columnNumber: 19
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 286,
+                                                            lineNumber: 306,
                                                             columnNumber: 17
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1144,7 +1180,7 @@ const QASystem = ()=>{
                                                             children: numQuestions
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 294,
+                                                            lineNumber: 314,
                                                             columnNumber: 17
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1156,24 +1192,24 @@ const QASystem = ()=>{
                                                                 className: "w-4 h-4"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/qa/page.tsx",
-                                                                lineNumber: 303,
+                                                                lineNumber: 323,
                                                                 columnNumber: 19
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 297,
+                                                            lineNumber: 317,
                                                             columnNumber: 17
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 285,
+                                                    lineNumber: 305,
                                                     columnNumber: 15
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 281,
+                                            lineNumber: 301,
                                             columnNumber: 13
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1189,7 +1225,7 @@ const QASystem = ()=>{
                                                                 className: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/qa/page.tsx",
-                                                                lineNumber: 317,
+                                                                lineNumber: 337,
                                                                 columnNumber: 21
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             "Generating..."
@@ -1200,7 +1236,7 @@ const QASystem = ()=>{
                                                                 className: "w-4 h-4 mr-2"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/qa/page.tsx",
-                                                                lineNumber: 322,
+                                                                lineNumber: 342,
                                                                 columnNumber: 21
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             "Generate Questions"
@@ -1208,7 +1244,7 @@ const QASystem = ()=>{
                                                     }, void 0, true)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 310,
+                                                    lineNumber: 330,
                                                     columnNumber: 15
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 generatedQuestions.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1218,25 +1254,25 @@ const QASystem = ()=>{
                                                     children: "Clear All"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 329,
+                                                    lineNumber: 349,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 309,
+                                            lineNumber: 329,
                                             columnNumber: 13
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/qa/page.tsx",
-                                    lineNumber: 246,
+                                    lineNumber: 253,
                                     columnNumber: 11
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/qa/page.tsx",
-                            lineNumber: 231,
+                            lineNumber: 238,
                             columnNumber: 9
                         }, ("TURBOPACK compile-time value", void 0)),
                         generatedQuestions.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1254,12 +1290,12 @@ const QASystem = ()=>{
                                                         className: "w-5 h-5 text-green-600 dark:text-green-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/qa/page.tsx",
-                                                        lineNumber: 347,
+                                                        lineNumber: 367,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 346,
+                                                    lineNumber: 366,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1269,7 +1305,7 @@ const QASystem = ()=>{
                                                             children: "Generated Questions"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 350,
+                                                            lineNumber: 370,
                                                             columnNumber: 19
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1282,19 +1318,19 @@ const QASystem = ()=>{
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 353,
+                                                            lineNumber: 373,
                                                             columnNumber: 19
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 349,
+                                                    lineNumber: 369,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 345,
+                                            lineNumber: 365,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1302,13 +1338,13 @@ const QASystem = ()=>{
                                             children: generatedQuestions.length
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 358,
+                                            lineNumber: 378,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/qa/page.tsx",
-                                    lineNumber: 344,
+                                    lineNumber: 364,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1329,12 +1365,12 @@ const QASystem = ()=>{
                                                                         children: index + 1
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/qa/page.tsx",
-                                                                        lineNumber: 372,
+                                                                        lineNumber: 392,
                                                                         columnNumber: 25
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                                    lineNumber: 371,
+                                                                    lineNumber: 391,
                                                                     columnNumber: 23
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1345,13 +1381,13 @@ const QASystem = ()=>{
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                                    lineNumber: 376,
+                                                                    lineNumber: 396,
                                                                     columnNumber: 23
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 370,
+                                                            lineNumber: 390,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1363,24 +1399,24 @@ const QASystem = ()=>{
                                                                 className: "w-4 h-4 text-green-600"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/qa/page.tsx",
-                                                                lineNumber: 387,
+                                                                lineNumber: 407,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$copy$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Copy$3e$__["Copy"], {
                                                                 className: "w-4 h-4 text-gray-500"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/qa/page.tsx",
-                                                                lineNumber: 389,
+                                                                lineNumber: 409,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 380,
+                                                            lineNumber: 400,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 369,
+                                                    lineNumber: 389,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1390,12 +1426,12 @@ const QASystem = ()=>{
                                                         children: qa.question
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/qa/page.tsx",
-                                                        lineNumber: 395,
+                                                        lineNumber: 415,
                                                         columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 394,
+                                                    lineNumber: 414,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1408,7 +1444,7 @@ const QASystem = ()=>{
                                                                     className: "w-2 h-2 bg-green-500 rounded-full mr-2"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                                    lineNumber: 402,
+                                                                    lineNumber: 422,
                                                                     columnNumber: 23
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1416,13 +1452,13 @@ const QASystem = ()=>{
                                                                     children: "Answer"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                                    lineNumber: 403,
+                                                                    lineNumber: 423,
                                                                     columnNumber: 23
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 401,
+                                                            lineNumber: 421,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1430,30 +1466,30 @@ const QASystem = ()=>{
                                                             children: qa.answer
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 407,
+                                                            lineNumber: 427,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 400,
+                                                    lineNumber: 420,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, index, true, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 365,
+                                            lineNumber: 385,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)))
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/qa/page.tsx",
-                                    lineNumber: 363,
+                                    lineNumber: 383,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/qa/page.tsx",
-                            lineNumber: 343,
+                            lineNumber: 363,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1468,12 +1504,12 @@ const QASystem = ()=>{
                                                 className: "w-5 h-5 text-blue-600 dark:text-blue-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/qa/page.tsx",
-                                                lineNumber: 421,
+                                                lineNumber: 441,
                                                 columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 420,
+                                            lineNumber: 440,
                                             columnNumber: 13
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1483,7 +1519,7 @@ const QASystem = ()=>{
                                                     children: "Generate Question Variants"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 424,
+                                                    lineNumber: 444,
                                                     columnNumber: 15
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1491,19 +1527,19 @@ const QASystem = ()=>{
                                                     children: "Create variations of existing questions with different values"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 427,
+                                                    lineNumber: 447,
                                                     columnNumber: 15
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 423,
+                                            lineNumber: 443,
                                             columnNumber: 13
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/qa/page.tsx",
-                                    lineNumber: 419,
+                                    lineNumber: 439,
                                     columnNumber: 11
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1516,7 +1552,7 @@ const QASystem = ()=>{
                                                     children: "Original Question"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 435,
+                                                    lineNumber: 455,
                                                     columnNumber: 15
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$textarea$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Textarea"], {
@@ -1526,13 +1562,13 @@ const QASystem = ()=>{
                                                     className: "min-h-[100px] resize-none"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 438,
+                                                    lineNumber: 458,
                                                     columnNumber: 15
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 434,
+                                            lineNumber: 454,
                                             columnNumber: 13
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1545,7 +1581,7 @@ const QASystem = ()=>{
                                                         className: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/qa/page.tsx",
-                                                        lineNumber: 453,
+                                                        lineNumber: 473,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     "Generating Variant..."
@@ -1556,7 +1592,7 @@ const QASystem = ()=>{
                                                         className: "w-4 h-4 mr-2"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/qa/page.tsx",
-                                                        lineNumber: 458,
+                                                        lineNumber: 478,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     "Generate Variant"
@@ -1564,7 +1600,7 @@ const QASystem = ()=>{
                                             }, void 0, true)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 446,
+                                            lineNumber: 466,
                                             columnNumber: 13
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         variantResponse && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1580,7 +1616,7 @@ const QASystem = ()=>{
                                                                     className: "w-2 h-2 bg-blue-500 rounded-full"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                                    lineNumber: 469,
+                                                                    lineNumber: 489,
                                                                     columnNumber: 21
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1588,13 +1624,13 @@ const QASystem = ()=>{
                                                                     children: "Generated Variant"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                                    lineNumber: 470,
+                                                                    lineNumber: 490,
                                                                     columnNumber: 21
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 468,
+                                                            lineNumber: 488,
                                                             columnNumber: 19
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1606,24 +1642,24 @@ const QASystem = ()=>{
                                                                 className: "w-4 h-4 text-green-600"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/qa/page.tsx",
-                                                                lineNumber: 481,
+                                                                lineNumber: 501,
                                                                 columnNumber: 23
                                                             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$copy$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Copy$3e$__["Copy"], {
                                                                 className: "w-4 h-4 text-blue-600"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/qa/page.tsx",
-                                                                lineNumber: 483,
+                                                                lineNumber: 503,
                                                                 columnNumber: 23
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/qa/page.tsx",
-                                                            lineNumber: 474,
+                                                            lineNumber: 494,
                                                             columnNumber: 19
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 467,
+                                                    lineNumber: 487,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1631,36 +1667,36 @@ const QASystem = ()=>{
                                                     children: variantResponse
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/qa/page.tsx",
-                                                    lineNumber: 487,
+                                                    lineNumber: 507,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/qa/page.tsx",
-                                            lineNumber: 466,
+                                            lineNumber: 486,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/qa/page.tsx",
-                                    lineNumber: 433,
+                                    lineNumber: 453,
                                     columnNumber: 11
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/qa/page.tsx",
-                            lineNumber: 418,
+                            lineNumber: 438,
                             columnNumber: 9
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/qa/page.tsx",
-                    lineNumber: 219,
+                    lineNumber: 226,
                     columnNumber: 7
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/src/app/qa/page.tsx",
-                lineNumber: 218,
+                lineNumber: 225,
                 columnNumber: 5
             }, ("TURBOPACK compile-time value", void 0))
         ]

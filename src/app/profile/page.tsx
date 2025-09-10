@@ -13,7 +13,7 @@ import {
 } from "~/components/ui/card"
 import { toast } from "sonner"
 
-import { User, Upload, LogOut, Mail } from "lucide-react";
+import { User, Upload, LogOut, Mail, Brain } from "lucide-react";
 
 import MouseFollow from "~/components/MouseFollow";
 import NavBar from "~/components/NavBar";
@@ -41,10 +41,6 @@ const ProfilePage = () => {
       router.push("/login");
     }
   }, [router]);
-
-  const handleGoToUploader = () => {
-    router.push("/uploader");
-  };
 
   const handleLogout = () => {
     setLoading(true);
@@ -132,11 +128,20 @@ const ProfilePage = () => {
             <div className="space-y-4">
               {/* Go to Uploader Button */}
               <Button
-                onClick={handleGoToUploader}
+                onClick={() => router.push("/uploader")}
                 className="w-full h-12 font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Upload className="mr-2 h-5 w-5" />
                 Go to File Uploader
+              </Button>
+
+              {/* Go to QA Syatem Button */}
+              <Button
+                onClick={() => router.push("/qa")}
+                className="w-full h-12 font-medium transition-colors bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Brain className="mr-2 h-5 w-5" />
+                Go to Question Answer AI
               </Button>
 
               {/* Logout Button */}

@@ -23,7 +23,8 @@ const config = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:6000/:path*",
+        // destination: "http://localhost:6000/:path*",
+        destination: "https://edubank-backend.onrender.com/:path*",
       },
     ];
   },

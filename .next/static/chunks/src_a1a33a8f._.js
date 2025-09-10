@@ -743,10 +743,10 @@ const FileUploader = ()=>{
                         status: "uploading"
                     } : f));
             const formData = new FormData();
-            formData.append("file", fileObj.file);
+            formData.append("dataset", fileObj.file);
             const token = localStorage.getItem("token");
             try {
-                const response = await fetch("/api/load", {
+                const response = await fetch("/api/api/datasets/upload", {
                     method: "POST",
                     headers: {
                         Authorization: token ? "Bearer ".concat(token) : ""
