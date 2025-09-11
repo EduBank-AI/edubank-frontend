@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
 
+import PasswordChecklist from 'react-password-checklist';
+
 import { Button } from "~/components/ui/button"
 import {
   Card,
@@ -17,7 +19,7 @@ import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
 import { toast } from "sonner"
 
-import { Loader2, UserPlus, Key } from "lucide-react";
+import { Loader2, UserPlus, Key, Check, X , EyeClosed, Eye} from "lucide-react";
 
 import NavBar from "~/components/NavBar";
 import MouseFollow from "~/components/MouseFollow";
@@ -28,6 +30,8 @@ const SignupPage = () => {
   const [password, setPassword] = useState("");
   const [accessCode, setAccessCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +54,7 @@ const SignupPage = () => {
       router.push("/profile");
     }
     else {
-      toast.error(data.message || "Signup failed");
+      toast.error(data.error) || "Failed to create account. Please try again.";
     }
   };
 
@@ -99,14 +103,44 @@ const SignupPage = () => {
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Password
                 </Label>
-                <Input 
-                  id="password" 
-                  type="password"
-                  placeholder="Create a password"
+
+                <div className="flex items-center mb-2 gap-2">
+                  <Input 
+                    id="password" 
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-10"
+                    required
+                  />
+                  <EyeClosed 
+                    size={20} 
+                    className={`cursor-pointer text-gray-400 hover:text-white transition-color duration-300 ${showPassword ? "hidden" : "block"}`}
+                    onClick={() => setShowPassword(true)}
+                  />
+
+                  <Eye 
+                    size={20} 
+                    className={`cursor-pointer text-gray-400 hover:text-white transition-color duration-300 ${showPassword ? "block" : "hidden"}`}
+                    onClick={() => setShowPassword(false)}
+                  />
+                </div>
+
+                <PasswordChecklist
+                  rules={["minLength", "specialChar", "lowercase"]}
+                  minLength={8}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-10"
-                  required
+                  onChange={(isValid) => setIsPasswordValid(isValid)}
+                  messages={{
+                    minLength: "at least 8 characters",
+                    specialChar: "includes a special character",
+                    lowercase: "includes a lowercase letter"
+                  }}
+                  iconComponents={{
+                    ValidIcon: <Check size={22} className="text-green-500" />,
+                    InvalidIcon: <X size={22} className="text-red-500" />,
+                  }}
                 />
               </div>
 
@@ -131,7 +165,7 @@ const SignupPage = () => {
               <Button
                 type="submit"
                 className="w-full h-11 font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white mt-6"
-                disabled={loading || !email.trim() || !password.trim() || !accessCode.trim()}
+                disabled={loading || !email.trim() || !password.trim() || !accessCode.trim() || !isPasswordValid}
               >
                 {loading ? (
                   <>

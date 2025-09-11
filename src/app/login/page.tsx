@@ -17,7 +17,7 @@ import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
 import { toast } from "sonner"
 
-import { Loader2, Lock, User } from "lucide-react";
+import { Loader2, Lock, User, EyeClosed, Eye } from "lucide-react";
 
 import MouseFollow from "~/components/MouseFollow";
 import NavBar from "~/components/NavBar";
@@ -27,6 +27,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +51,7 @@ const LoginPage = () => {
       router.push("/profile");
     }
     else {
-      toast.error(data.message || "Login failed");
+      toast.error(data.error || "Login failed");
     }
   };
 
@@ -106,15 +107,29 @@ const LoginPage = () => {
                     Forgot password?
                   </a>
                 </div>
-                <Input 
-                  id="password" 
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-10"
-                  required
-                />
+
+                <div className="flex items-center mb-2 gap-2">
+                  <Input 
+                    id="password" 
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-10"
+                    required
+                  />
+                  <EyeClosed 
+                    size={20} 
+                    className={`cursor-pointer text-gray-400 hover:text-white transition-color duration-300 ${showPassword ? "hidden" : "block"}`}
+                    onClick={() => setShowPassword(true)}
+                  />
+
+                  <Eye 
+                    size={20} 
+                    className={`cursor-pointer text-gray-400 hover:text-white transition-color duration-300 ${showPassword ? "block" : "hidden"}`}
+                    onClick={() => setShowPassword(false)}
+                  />
+                </div>
               </div>
 
               <Button
